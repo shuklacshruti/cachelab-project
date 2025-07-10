@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
+import os
 import subprocess
 import re
+import sys
 
 def parse_summary(output):
     """
@@ -101,6 +103,12 @@ def main():
                     total +=1
 
     print(f"\nPassed {passed}/{total} tests.")
+    
+    if 'GITHUB_STEP_SUMMARY' in os.environ:
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+            f.write(f"## Part B\n")
+            f.write(f"**Score: {passed}/{total}** {'✅' if passed == total else '❌'}\n\n")
+    sys.exit(passed < total)
 
 if __name__ == "__main__":
     main()
