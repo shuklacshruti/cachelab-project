@@ -1,4 +1,4 @@
-# CacheLab Project — Rutgers CS211 Summer 2025
+# CacheLab Project - Rutgers CS211 Summer 2025 (Tina Burns)
 
 ## Overview
 
