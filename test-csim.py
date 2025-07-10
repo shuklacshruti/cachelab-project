@@ -1,8 +1,9 @@
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*- 
 """
 AUTHOR: Tina Burns & Alborz Jelvani
 LOCATION: Rutgers University
-CLASS: CS211 Computer Architecture
+LASS: CS211 Computer Architecture
 SESSION: Summer 2025
 
 DESCRIPTION:
@@ -135,7 +136,12 @@ def test_csim():
     print(f"\nSCORE for Part A: {total_points:.2f}/48.00\n");  
     
     print("\nThe program will be evaluted for additional test and criteria not included in these test cases.\n");
-    return total_points;
+    
+    if 'GITHUB_STEP_SUMMARY' in os.environ:
+        with open(os.environ['GITHUB_STEP_SUMMARY'], 'a') as f:
+            f.write(f"## Part A\n")
+            f.write(f"**Score: {total_points}/48** {'✅' if total_points == 48 else '❌'}\n\n")
+    sys.exit(total_points < 48)
     
 def main():
     import argparse
