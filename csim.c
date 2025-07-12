@@ -141,5 +141,10 @@ int main(int argc, char **argv) {
     fclose(fp);
     printf("hits:%d misses:%d evictions:%d\n", hits, misses, evictions);
 
+    for (int i = 0; i < cache.S; i++) {
+        free(cache.sets[i].lines);
+    }
+    free(cache.sets);
+
     return 0;
 }
