@@ -7,6 +7,10 @@
 #include <stdlib.h>
 #include <unistd.h>
 
+#define HIT 0
+#define MISS 1
+#define EVICTION 2
+
 int hits = 0, misses = 0, evictions = 0;
 
 typedef struct {
@@ -27,9 +31,9 @@ typedef struct {
     int S;
 } cache_t; 
 
-// TODO: implement cache_access function that returns 1 for hit, 0 for miss
+// TODO: implement cache_access function that returns HIT, MISS, or EVICTION and increments hits, misses, evictions variables
 int cache_access(unsigned long addr) {
-    return 0;
+    return MISS;
 };
 
 void print_usage(char *argv0) {
@@ -96,6 +100,9 @@ int main(int argc, char **argv) {
     char op;
     unsigned long addr;
     int size;
+    
+    const char* result_str[] = {"hit", "miss", "miss eviction"};
+    
     while (fscanf(fp, " %c %lx,%d", &op, &addr, &size) == 3) {
         if (op == 'I') continue;
         if (verbose) {
@@ -104,15 +111,13 @@ int main(int argc, char **argv) {
         switch (op) {
             case 'L': // Load
             case 'S': // Store
-                if (verbose) printf("%s\n", cache_access(addr) ? "hit" : "miss");
+                if (verbose) printf("%s\n", result_str[cache_access(addr)]);
                 else cache_access(addr);
                 break;
             case 'M': // Modify (load + store)
-                {
-                    int result = cache_access(addr);
-                    assert(cache_access(addr) == 1); // should always hit
-                    if (verbose) printf("%s hit\n", result ? "hit" : "miss");
-                }
+                if (verbose) printf("%s hit\n", result_str[cache_access(addr)]);
+                else cache_access(addr);
+                assert(cache_access(addr) == HIT);
                 break;
             default: // Unknown
                 break;
