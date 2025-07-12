@@ -1,9 +1,22 @@
 /*
  * TODO: add names and netids here
  */
+#include <assert.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
+int hits = 0, misses = 0, evictions = 0;
+
+// TODO: define cache data structures
+struct cache_t {
+} *cache;
+
+// TODO: implement cache_access function that returns 1 for hit, 0 for miss
+int cache_access(unsigned long addr) {
+    return 0;
+};
 
 void print_usage(char *argv0) {
     printf("Usage: %s [-hv] -s <s> -E <E> -b <b> -t <tracefile>\n", argv0);
@@ -57,7 +70,42 @@ int main(int argc, char **argv) {
     }
 
     // At this point, you have your parameters in s, E, b, tracefile, and verbose
-    // TODO: Your simulation code goes here
+
+    // TODO: initialize cache with parameters s, E, b
+
+    FILE *fp = fopen(tracefile, "r");
+    if (fp == NULL) {
+        fprintf(stderr, "cannot open trace file %s: %m\n", tracefile);
+        exit(1);
+    }
+
+    char op;
+    unsigned long addr;
+    int size;
+    while (fscanf(fp, " %c %lx,%d", &op, &addr, &size) == 3) {
+        if (op == 'I') continue;
+        if (verbose) {
+            printf("%c %lx,%d ", op, addr, size);
+        }
+        switch (op) {
+            case 'L': // Load
+            case 'S': // Store
+                if (verbose) printf("%s\n", cache_access(addr) ? "hit" : "miss");
+                else cache_access(addr);
+                break;
+            case 'M': // Modify (load + store)
+                {
+                    int result = cache_access(addr);
+                    assert(cache_access(addr) == 1); // should always hit
+                    if (verbose) printf("%s hit\n", result ? "hit" : "miss");
+                }
+                break;
+            default: // Unknown
+                break;
+        }
+    }
+    fclose(fp);
+    printf("hits:%d misses:%d evictions:%d\n", hits, misses, evictions);
 
     return 0;
 }
