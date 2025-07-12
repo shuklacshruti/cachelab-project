@@ -38,12 +38,12 @@ void print_usage(char *progname) {
 }
 
 void parse_args(int argc, char *argv[]) {
-    int opt; //getopt function parses argv p,r,b,t
+    int opt;
     while ((opt = getopt(argc, argv, "p:r:b:t:")) != -1) {
         switch (opt) {
             case 'p':
                 if (strlen(optarg) != 1 || (optarg[0] != 'h' && optarg[0] != 'm' && optarg[0] != 'e')) {
-                    printf("Invalid performance metric: %s\n", optarg);
+                    fprintf(stderr, "Invalid performance metric: %s\n", optarg);
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -52,7 +52,7 @@ void parse_args(int argc, char *argv[]) {
             case 'r':
                 target_rate = atof(optarg);
                 if (target_rate < 0.0 || target_rate > 100.0) {
-                    printf("Invalid Target Rate\n");
+                    fprintf(stderr, "Target rate must be between 0.00 and 100.00\n");
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -70,7 +70,7 @@ void parse_args(int argc, char *argv[]) {
     }
 
     if (!perf_metric || !csim_binary || !trace_file) {
-        printf("Missing the necessary arguments\n");
+        fprintf(stderr, "Missing required arguments\n");
         print_usage(argv[0]);
         exit(1);
     }
@@ -79,10 +79,15 @@ void parse_args(int argc, char *argv[]) {
 int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     char cmd[MAX_CMD_LEN];
     char line[256];
+    FILE *fp;
 
     snprintf(cmd, MAX_CMD_LEN, "%s -s %d -E %d -b %d -t %s", csim_binary, config.s, config.E, config.b, trace_file);
 
-    FILE *fp = fopen(cmd, "r");
+    fp = popen(cmd, "r");
+    if (!fp) {
+        fprintf(stderr, "Failed to run command: %s\n", cmd);
+        return -1;
+    }
 
     stats->hits = 0;
     stats->misses = 0;
@@ -96,19 +101,18 @@ int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     }
 
     pclose(fp);
-    printf("Failed to parse csim output\n");
     return -1;
 }
 
 float compute_metric(cache_stats_t *stats, char metric) {
     int total = stats->hits + stats->misses;
-    if (total == 0) return 0;
+    if (total == 0) return 0.0;
 
     switch(metric) {
         case 'h': return (float)stats->hits / total * 100.0f;
         case 'm': return (float)stats->misses / total * 100.0f;
         case 'e': return (float)stats->evictions / total * 100.0f;
-        default: return 0;
+        default: return 0.0;
     }
 }
 
@@ -126,33 +130,34 @@ int main(int argc, char *argv[]) {
     cache_config_t best_config = {0,0,0};
     cache_stats_t best_stats = {0,0,0};
     int found_valid = 0;
+    float best_metric = 0.0;
 
     (void)best_stats;  // suppress unused warning for now
 
-    // Reduced search space for speed & avoiding timeout
-    for (int s = 0; s <= 10; s++) {
+    // use search space from project directions: s=1-5, E=1-4, b=1-5
+    for (int s = 1; s <= 5; s++) {
         for (int E = 1; E <= 4; E++) {
-            for (int b = 1; b <= 10; b++) {
+            for (int b = 1; b <= 5; b++) {
                 cache_config_t cfg = {s, E, b};
                 cache_stats_t stats;
                 if (run_csim_and_get_stats(cfg, &stats) != 0) {
-                    printf("Error running csim for the config s=%d E=%d b=%d\n", s, E, b);
                     continue;
                 }
 
-                float metric_val = compute_metric(&stats, perf_metric);
+                float metric_value = compute_metric(&stats, perf_metric);
 
-                int good_metric = 0;
+                int metric_ok = 0;
                 if (perf_metric == 'h') {
-                    good_metric = (metric_val >= target_rate);
+                    metric_ok = (metric_value >= target_rate);
                 } else {
-                    good_metric = (metric_val <= target_rate);
+                    metric_ok = (metric_value <= target_rate);
                 }
 
-                if (good_metric) {
-                    if (!found_valid || is_smaller_config(cfg, best_config)) {
+                if (metric_ok) {
+                    if (!found_valid || metric_value > best_metric) {
                         best_config = cfg;
                         best_stats = stats;
+                        best_metric = metric_value;
                         found_valid = 1;
                     }
                 }
