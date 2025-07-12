@@ -150,13 +150,13 @@ int main(int argc, char *argv[]) {
 
                 int metric_ok = 0;
                 if (perf_metric == 'h') {
-                    metric_ok = (metric_value >= target_rate);
+                    metric_ok = (metric_value > target_rate);
                 } else {
-                    metric_ok = (metric_value <= target_rate);
+                    metric_ok = (metric_value < target_rate);
                 }
 
                 if (metric_ok) {
-                    if (!found_valid || is_smaller_config(cfg, best_config)) {
+                    if (!found_valid || metric_value > best_metric) {
                         best_config = cfg;
                         best_stats = stats;
                         found_valid = 1;
