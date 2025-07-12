@@ -23,10 +23,24 @@ jobs:
       continue-on-error: true
       
     - name: Test csim
+      id: test-csim
       if: steps.build-csim.outcome == 'success'
       run: make test-csim
       continue-on-error: true
       
     - name: Test ctuner
+      id: test-ctuner
       if: steps.build-ctuner.outcome == 'success'
       run: make test-ctuner
+      continue-on-error: true
+      
+    - name: Push submission files
+      if: steps.test-csim.outcome == 'success' && steps.test-ctuner.outcome == 'success'
+      run: |
+        git config --global user.name 'github-actions[bot]'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+        git checkout --orphan submission
+        git rm -rf .
+        git add csim.c ctuner.c Makefile
+        git commit -m "Submission files after successful tests"
+        git push origin submission --force
