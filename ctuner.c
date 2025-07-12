@@ -154,7 +154,8 @@ int main(int argc, char *argv[]) {
                 }
 
                 if (metric_ok) {
-                    if (!found_valid || metric_value > best_metric) {
+                    if (!found_valid || metric_value > best_metric || 
+                        (metric_value == best_metric && is_smaller_config(cfg, best_config))) {
                         best_config = cfg;
                         best_stats = stats;
                         best_metric = metric_value;
