@@ -31,6 +31,8 @@ typedef struct {
     int S;
 } cache_t; 
 
+cache_t cache;
+
 // TODO: implement cache_access function that returns HIT, MISS, or EVICTION and increments hits, misses, evictions variables
 int cache_access(unsigned long addr) {
     return MISS;
@@ -89,7 +91,20 @@ int main(int argc, char **argv) {
 
     // At this point, you have your parameters in s, E, b, tracefile, and verbose
 
-    // TODO: initialize cache with parameters s, E, b
+    cache.s = s;
+    cache.E = E;
+    cache.b = b;
+    cache.S = 1 << s; // we have 2^s sets
+    
+    cache.sets = (cache_set_t*)malloc(cache.S * sizeof(cache_set_t));
+    for (int i = 0; i < cache.S; i++) {
+        cache.sets[i].lines = (cache_line_t*)malloc(cache.E * sizeof(cache_line_t));
+        for (int j = 0; j < cache.E; j++) {
+            cache.sets[i].lines[j].valid = 0;
+            cache.sets[i].lines[j].tag = 0;
+            cache.sets[i].lines[j].lru_counter = 0;
+        }
+    }
 
     FILE *fp = fopen(tracefile, "r");
     if (fp == NULL) {
