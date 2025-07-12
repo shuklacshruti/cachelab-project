@@ -1,8 +1,8 @@
 /*
  * Shruti Shukla - scs250
-   Shreya Bhatlapenumarti - sb2453
-   Arnav Nethula - akn74
-   Samuel Hernandez - sh1758
+ * Shreya Bhatlapenumarti - sb2453
+ * Arnav Nethula - akn74
+ * Samuel Hernandez - sh1758
  */
 
 #include <assert.h>

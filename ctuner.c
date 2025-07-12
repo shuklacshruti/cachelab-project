@@ -1,6 +1,10 @@
 /*
- * TODO: add names and netids here
+ * Shruti Shukla - scs250
+ * Shreya Bhatlapenumarti - sb2453
+ * Arnav Nethula - akn74
+ * Samuel Hernandez - sh1758
  */
+
 #include <stdio.h>
 #include <stdlib.h>
 
