@@ -5,6 +5,9 @@ on: [push, pull_request]
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        component: [csim, ctuner]
     
     steps:
     - uses: actions/checkout@v4
@@ -12,30 +15,19 @@ jobs:
     - name: Install build tools
       run: sudo apt-get update && sudo apt-get install -y build-essential python3
     
-    - name: Build csim
-      id: build-csim
-      run: make csim
-      continue-on-error: true
+    - name: Build ${{ matrix.component }}
+      run: make ${{ matrix.component }}
       
-    - name: Build ctuner  
-      id: build-ctuner
-      run: make ctuner
-      continue-on-error: true
-      
-    - name: Test csim
-      id: test-csim
-      if: steps.build-csim.outcome == 'success'
-      run: make test-csim
-      continue-on-error: true
-      
-    - name: Test ctuner
-      id: test-ctuner
-      if: steps.build-ctuner.outcome == 'success'
-      run: make test-ctuner
-      continue-on-error: true
-      
+    - name: Test ${{ matrix.component }}
+      run: make test-${{ matrix.component }}
+
+  submission:
+    runs-on: ubuntu-latest
+    needs: test
+    if: success()
+    steps:
+    - uses: actions/checkout@v4
     - name: Push submission files
-      if: steps.test-csim.outcome == 'success' && steps.test-ctuner.outcome == 'success'
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
