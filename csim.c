@@ -20,7 +20,7 @@ typedef struct {
 } cache_line_t; 
 
 typedef struct {
-    cache_line_t *lines
+    cache_line_t *lines;
 } cache_set_t; 
 
 typedef struct {
