@@ -10,8 +10,23 @@
 int hits = 0, misses = 0, evictions = 0;
 
 // TODO: define cache data structures
-struct cache_t {
-} *cache;
+typedef struct {
+    int valid; 
+    unsigned long tag; 
+    int lru_counter; 
+} cache_line_t; 
+
+typedef struct {
+    cache_line_t *lines
+} cache_set_t; 
+
+typedef struct {
+    cache_set_t *sets; 
+    int s;
+    int E;
+    int b;
+    int S;
+} cache_t; 
 
 // TODO: implement cache_access function that returns 1 for hit, 0 for miss
 int cache_access(unsigned long addr) {
