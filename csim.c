@@ -9,7 +9,6 @@
 
 int hits = 0, misses = 0, evictions = 0;
 
-// TODO: define cache data structures
 typedef struct {
     int valid; 
     unsigned long tag; 
