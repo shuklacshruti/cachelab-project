@@ -33,10 +33,80 @@ typedef struct {
 
 cache_t cache;
 
-// TODO: implement cache_access function that returns HIT, MISS, or EVICTION and increments hits, misses, evictions variables
+// COMPLETED TODO: implement cache_access function that returns HIT, MISS, or EVICTION and increments hits, misses, evictions variables
 int cache_access(unsigned long addr) {
-    return MISS;
-};
+    unsigned long setIndex = (addr >> cache.b) & ((1 << cache.s) - 1); 
+    unsigned long tag = addr >> (cache.s + cache.b); 
+
+    cache_set_t *set = &cache.sets[setIndex];
+    
+    for(int i = 0; i < cache.E; i++)
+    {
+        if(set->lines[i].valid && set->lines[i].tag == tag)
+        {
+            set->lines[i].lru_counter = 0; 
+            for(int j = 0; j < cache.E; j++)
+            {
+                if(j != i && set->lines[j].valid)
+                {
+                    set->lines[j].lru_counter  = set->lines[j].lru_counter + 1; 
+                }
+            }
+        }
+        hits = hits + 1; 
+        return HIT; 
+    }
+
+    int lruLine = 0; 
+    int emptyLine = -1;
+    int maxLru = set->lines[0].lru_counter;  
+    for(int i = 0; i < cache.E; i++)
+    {
+        if(!set->lines[i].valid)
+        {
+            emptyLine = i;
+            break; 
+        }
+        if(set->lines[i].lru_counter > maxLru)
+        {
+            maxLru = set->lines[i].lru_counter; 
+            lruLine = i; 
+        }
+    }
+    int r; 
+    if(emptyLine == -1)
+    {
+        set->lines[lruLine].tag = tag; 
+        set->lines[lruLine].lru_counter = 0; 
+        r = EVICTION; 
+        misses = misses + 1; 
+        evictions = evictions + 1; 
+    }
+    else
+    {
+        set->lines[emptyLine].valid = 1;
+        set->lines[emptyLine].tag = tag; 
+        set->lines[emptyLine].lru_counter = 0;
+        r = MISS; 
+        misses = misses + 1; 
+    }
+
+    for(int i = 0; i < cache.E; i++)
+    {
+        if(set->lines[i].valid)
+        {
+            if(i != emptyLine && emptyLine != -1)
+            {
+                set->lines[i].lru_counter = set->lines[i].lru_counter + 1;
+            }
+            else if(i != lruLine && emptyLine == -1)
+            {
+                set->lines[i].lru_counter = set->lines[i].lru_counter + 1; 
+            }
+        }
+    }
+    return r;
+}
 
 void print_usage(char *argv0) {
     printf("Usage: %s [-hv] -s <s> -E <E> -b <b> -t <tracefile>\n", argv0);
