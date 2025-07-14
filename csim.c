@@ -35,8 +35,42 @@ cache_t cache;
 
 // TODO: implement cache_access function that returns HIT, MISS, or EVICTION and increments hits, misses, evictions variables
 int cache_access(unsigned long addr) {
-    return MISS;
-};
+    unsigned long idx = (addr >> cache.b) & ((1 << cache.s) - 1);
+    unsigned long tag = addr >> (cache.s + cache.b);
+    cache_line_t *lines = cache.sets[idx].lines;
+    for (int i = 0; i < cache.E; i++) {
+        if (lines[i].valid && lines[i].tag == tag) {
+            lines[i].lru_counter = 0;
+            hits++;
+            return HIT;
+        }
+    }
+
+    int open = -1;
+    int max = -1;
+    int evict = 0;
+
+    for (int i = 0; i < cache.E; i++) {
+        if (!lines[i].valid && open == -1) open = i;
+        if (lines[i].valid) {
+            lines[i].lru_counter++;
+            if (lines[i].lru_counter > max) {
+                max = lines[i].lru_counter;
+                evict = i;
+            }
+        }
+    }
+
+    misses++;
+    int target = (open != -1) ? open : evict;
+    if (open == -1) evictions++;
+
+    lines[target].valid = 1;
+    lines[target].tag = tag;
+    lines[target].lru_counter = 0;
+
+    return (open == -1) ? EVICTION : MISS;
+}
 
 void print_usage(char *argv0) {
     printf("Usage: %s [-hv] -s <s> -E <E> -b <b> -t <tracefile>\n", argv0);
