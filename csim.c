@@ -4,6 +4,7 @@
    Arnav Nethula - akn74
    Samuel Hernandez - sh1758
  */
+
 #include <assert.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -44,21 +45,21 @@ int cache_access(unsigned long addr) {
     cache_set_t *set = &cache.sets[setIndex];
     
     for(int i = 0; i < cache.E; i++)
-{
-    if(set->lines[i].valid && set->lines[i].tag == tag)
     {
-        hits = hits + 1;
-        set->lines[i].lru_counter = 0; 
-        for(int j = 0; j < cache.E; j++)
+        if(set->lines[i].valid && set->lines[i].tag == tag)
         {
-            if(j != i && set->lines[j].valid)
+            set->lines[i].lru_counter = 0; 
+            for(int j = 0; j < cache.E; j++)
             {
-                set->lines[j].lru_counter  = set->lines[j].lru_counter + 1; 
+                if(j != i && set->lines[j].valid)
+                {
+                    set->lines[j].lru_counter  = set->lines[j].lru_counter + 1; 
+                }
             }
         }
+        hits = hits + 1; 
         return HIT; 
     }
-}
 
     int lruLine = 0; 
     int emptyLine = -1;
