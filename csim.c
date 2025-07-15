@@ -52,9 +52,9 @@ int cache_access(unsigned long addr) {
                     set->lines[j].lru_counter  = set->lines[j].lru_counter + 1; 
                 }
             }
+            hits = hits + 1; 
+            return HIT; 
         }
-        hits = hits + 1; 
-        return HIT; 
     }
 
     int lruLine = 0; 
