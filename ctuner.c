@@ -4,13 +4,6 @@
  * Arnav Nethula - akn74
  * Samuel Hernandez - sh1758
  */
-/*#include <stdio.h>
-#include <stdlib.h>make clean
-
-int main(int argc, char *argv[]) {
-    printf("ctuner: Not implemented yet\n");
-    exit(1);
-}  */
 
 #define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
