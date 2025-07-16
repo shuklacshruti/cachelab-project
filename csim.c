@@ -82,7 +82,9 @@ int cache_access(unsigned long addr) {
     {
         set->lines[lruLine].tag = tag; 
         set->lines[lruLine].lru_counter = 0; 
+
         r = EVICTION; 
+
         misses = misses + 1; 
         evictions = evictions + 1; 
     }
@@ -91,7 +93,9 @@ int cache_access(unsigned long addr) {
         set->lines[emptyLine].valid = 1;
         set->lines[emptyLine].tag = tag; 
         set->lines[emptyLine].lru_counter = 0;
+        
         r = MISS; 
+
         misses = misses + 1; 
     }
 
@@ -129,7 +133,7 @@ int main(int argc, char **argv) {
     char *tracefile = NULL;
     int verbose = 0;
 
-    int opt;
+    int opt; //getopt for parsing argv E,b,t,h,v,s
     while ((opt = getopt(argc, argv, "hvs:E:b:t:")) != -1) {
         switch (opt) {
             case 'h':
@@ -163,7 +167,6 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    // At this point, you have your parameters in s, E, b, tracefile, and verbose
 
     cache.s = s;
     cache.E = E;
@@ -182,7 +185,7 @@ int main(int argc, char **argv) {
 
     FILE *fp = fopen(tracefile, "r");
     if (fp == NULL) {
-        fprintf(stderr, "cannot open trace file %s: %m\n", tracefile);
+        printf("cannot open trace file %s: %m\n", tracefile);
         exit(1);
     }
 
@@ -203,12 +206,12 @@ int main(int argc, char **argv) {
                 if (verbose) printf("%s\n", result_str[cache_access(addr)]);
                 else cache_access(addr);
                 break;
-            case 'M': // Modify (load + store)
+            case 'M': // Modify--> meaning load and store
                 if (verbose) printf("%s hit\n", result_str[cache_access(addr)]);
                 else cache_access(addr);
                 assert(cache_access(addr) == HIT);
                 break;
-            default: // Unknown
+            default: 
                 break;
         }
     }

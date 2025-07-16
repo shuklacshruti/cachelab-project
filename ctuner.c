@@ -5,7 +5,6 @@
  * Samuel Hernandez - sh1758
  */
 
-#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,12 +38,12 @@ void print_usage(char *progname) {
 }
 
 void parse_args(int argc, char *argv[]) {
-    int opt;
+    int opt; //getopt function parses argv p,r,b,t
     while ((opt = getopt(argc, argv, "p:r:b:t:")) != -1) {
         switch (opt) {
             case 'p':
                 if (strlen(optarg) != 1 || (optarg[0] != 'h' && optarg[0] != 'm' && optarg[0] != 'e')) {
-                    fprintf(stderr, "Invalid performance metric: %s\n", optarg);
+                    printf("Invalid performance metric: %s\n", optarg);
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -53,7 +52,7 @@ void parse_args(int argc, char *argv[]) {
             case 'r':
                 target_rate = atof(optarg);
                 if (target_rate < 0.0 || target_rate > 100.0) {
-                    fprintf(stderr, "Target rate must be between 0.00 and 100.00\n");
+                    printf("Invalid Target Rate\n");
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -71,7 +70,7 @@ void parse_args(int argc, char *argv[]) {
     }
 
     if (!perf_metric || !csim_binary || !trace_file) {
-        fprintf(stderr, "Missing required arguments\n");
+        printf("Missing the necessary arguments\n");
         print_usage(argv[0]);
         exit(1);
     }
@@ -80,15 +79,10 @@ void parse_args(int argc, char *argv[]) {
 int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     char cmd[MAX_CMD_LEN];
     char line[256];
-    FILE *fp;
 
     snprintf(cmd, MAX_CMD_LEN, "%s -s %d -E %d -b %d -t %s", csim_binary, config.s, config.E, config.b, trace_file);
 
-    fp = popen(cmd, "r");
-    if (!fp) {
-        fprintf(stderr, "Failed to run command: %s\n", cmd);
-        return -1;
-    }
+    FILE *fp = fopen(cmd, "r");
 
     stats->hits = 0;
     stats->misses = 0;
@@ -102,19 +96,19 @@ int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     }
 
     pclose(fp);
-    fprintf(stderr, "Failed to parse csim output\n");
+    printf("Failed to parse csim output\n");
     return -1;
 }
 
 float compute_metric(cache_stats_t *stats, char metric) {
     int total = stats->hits + stats->misses;
-    if (total == 0) return 0.0;
+    if (total == 0) return 0;
 
     switch(metric) {
         case 'h': return (float)stats->hits / total * 100.0f;
         case 'm': return (float)stats->misses / total * 100.0f;
         case 'e': return (float)stats->evictions / total * 100.0f;
-        default: return 0.0;
+        default: return 0;
     }
 }
 
@@ -142,20 +136,20 @@ int main(int argc, char *argv[]) {
                 cache_config_t cfg = {s, E, b};
                 cache_stats_t stats;
                 if (run_csim_and_get_stats(cfg, &stats) != 0) {
-                    fprintf(stderr, "Error running csim for config s=%d E=%d b=%d\n", s, E, b);
+                    printf("Error running csim for the config s=%d E=%d b=%d\n", s, E, b);
                     continue;
                 }
 
-                float metric_value = compute_metric(&stats, perf_metric);
+                float metric_val = compute_metric(&stats, perf_metric);
 
-                int metric_ok = 0;
+                int good_metric = 0;
                 if (perf_metric == 'h') {
-                    metric_ok = (metric_value >= target_rate);
+                    good_metric = (metric_val >= target_rate);
                 } else {
-                    metric_ok = (metric_value <= target_rate);
+                    good_metric = (metric_val <= target_rate);
                 }
 
-                if (metric_ok) {
+                if (good_metric) {
                     if (!found_valid || is_smaller_config(cfg, best_config)) {
                         best_config = cfg;
                         best_stats = stats;
