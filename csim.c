@@ -185,7 +185,7 @@ int main(int argc, char **argv) {
 
     FILE *fp = fopen(tracefile, "r");
     if (fp == NULL) {
-        printf("cannot open trace file %s: %m\n", tracefile);
+        fprintf(stderr, "cannot open trace file %s: %m\n", tracefile);
         exit(1);
     }
 
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
                 if (verbose) printf("%s\n", result_str[cache_access(addr)]);
                 else cache_access(addr);
                 break;
-            case 'M': // Modify--> meaning load and store
+            case 'M': // Modify (load + store)
                 if (verbose) printf("%s hit\n", result_str[cache_access(addr)]);
                 else cache_access(addr);
                 assert(cache_access(addr) == HIT);
