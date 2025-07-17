@@ -5,7 +5,6 @@
  * Samuel Hernandez - sh1758
  */
 
-#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -102,7 +101,6 @@ int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     }
 
     pclose(fp);
-    fprintf(stderr, "Failed to parse csim output\n");
     return -1;
 }
 
@@ -132,17 +130,17 @@ int main(int argc, char *argv[]) {
     cache_config_t best_config = {0,0,0};
     cache_stats_t best_stats = {0,0,0};
     int found_valid = 0;
+    float best_metric = 0.0;
 
     (void)best_stats;  // suppress unused warning for now
 
-    // Reduced search space for speed & avoiding timeout
-    for (int s = 0; s <= 10; s++) {
+    // use search space from project directions: s=1-5, E=1-4, b=1-5
+    for (int s = 1; s <= 5; s++) {
         for (int E = 1; E <= 4; E++) {
-            for (int b = 1; b <= 10; b++) {
+            for (int b = 1; b <= 5; b++) {
                 cache_config_t cfg = {s, E, b};
                 cache_stats_t stats;
                 if (run_csim_and_get_stats(cfg, &stats) != 0) {
-                    fprintf(stderr, "Error running csim for config s=%d E=%d b=%d\n", s, E, b);
                     continue;
                 }
 
@@ -159,6 +157,7 @@ int main(int argc, char *argv[]) {
                     if (!found_valid || metric_value > best_metric) {
                         best_config = cfg;
                         best_stats = stats;
+                        best_metric = metric_value;
                         found_valid = 1;
                     }
                 }
@@ -173,4 +172,4 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-} 
+}
