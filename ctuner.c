@@ -5,6 +5,7 @@
  * Samuel Hernandez - sh1758
  */
 
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -38,12 +39,12 @@ void print_usage(char *progname) {
 }
 
 void parse_args(int argc, char *argv[]) {
-    int opt;    //geopt for parsing p,r,t,b
+    int opt;
     while ((opt = getopt(argc, argv, "p:r:b:t:")) != -1) {
         switch (opt) {
             case 'p':
                 if (strlen(optarg) != 1 || (optarg[0] != 'h' && optarg[0] != 'm' && optarg[0] != 'e')) {
-                    printf("Invalid performance metric: %s\n", optarg);
+                    fprintf(stderr, "Invalid performance metric: %s\n", optarg);
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -52,7 +53,7 @@ void parse_args(int argc, char *argv[]) {
             case 'r':
                 target_rate = atof(optarg);
                 if (target_rate < 0.0 || target_rate > 100.0) {
-                    printf("Target rate must be between 0.00 and 100.00\n");
+                    fprintf(stderr, "Target rate must be between 0.00 and 100.00\n");
                     print_usage(argv[0]);
                     exit(1);
                 }
@@ -70,7 +71,7 @@ void parse_args(int argc, char *argv[]) {
     }
 
     if (!perf_metric || !csim_binary || !trace_file) {
-        printf("Missing required arguments\n");
+        fprintf(stderr, "Missing required arguments\n");
         print_usage(argv[0]);
         exit(1);
     }
@@ -85,7 +86,7 @@ int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
 
     fp = popen(cmd, "r");
     if (!fp) {
-        printf("Failed to run command: %s\n", cmd);
+        fprintf(stderr, "Failed to run command: %s\n", cmd);
         return -1;
     }
 
@@ -101,6 +102,7 @@ int run_csim_and_get_stats(cache_config_t config, cache_stats_t *stats) {
     }
 
     pclose(fp);
+    fprintf(stderr, "Failed to parse csim output\n");
     return -1;
 }
 
@@ -130,17 +132,17 @@ int main(int argc, char *argv[]) {
     cache_config_t best_config = {0,0,0};
     cache_stats_t best_stats = {0,0,0};
     int found_valid = 0;
-    float best_metric = 0.0;
 
-    (void)best_stats; 
+    (void)best_stats;  // suppress unused warning for now
 
-    // use search space from project directions: s=1-5, E=1-4, b=1-5
-    for (int s = 1; s <= 5; s++) {
+    // Reduced search space for speed & avoiding timeout
+    for (int s = 0; s <= 10; s++) {
         for (int E = 1; E <= 4; E++) {
-            for (int b = 1; b <= 5; b++) {
+            for (int b = 1; b <= 10; b++) {
                 cache_config_t cfg = {s, E, b};
                 cache_stats_t stats;
                 if (run_csim_and_get_stats(cfg, &stats) != 0) {
+                    fprintf(stderr, "Error running csim for config s=%d E=%d b=%d\n", s, E, b);
                     continue;
                 }
 
@@ -154,11 +156,9 @@ int main(int argc, char *argv[]) {
                 }
 
                 if (metric_ok) {
-                    if (!found_valid || metric_value > best_metric || 
-                        (metric_value == best_metric && is_smaller_config(cfg, best_config))) {
+                    if (!found_valid || is_smaller_config(cfg, best_config)) {
                         best_config = cfg;
                         best_stats = stats;
-                        best_metric = metric_value;
                         found_valid = 1;
                     }
                 }
@@ -173,4 +173,4 @@ int main(int argc, char *argv[]) {
     }
 
     return 0;
-}
+} 
